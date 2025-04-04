@@ -1,0 +1,62 @@
+From d1af71e2f21c9ed9428bdff105aba10bf8281250 Mon Sep 17 00:00:00 2001
+From: Greg Scaffidi <sgscaffidi3@gmail.com>
+Date: Fri, 4 Apr 2025 11:38:28 -0500
+Subject: [PATCH] spirv
+
+---
+ configure | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/configure b/configure
+index ccbb57d732..4bf61ce751 100755
+--- a/configure
++++ b/configure
+@@ -2719,6 +2719,7 @@ CMDLINE_SET="
+     ignore_tests
+     install
+     ld
++    libglslang_ldflags
+     ln_s
+     logfile
+     malloc_prefix
+@@ -6831,6 +6832,24 @@ if enabled_all libglslang libshaderc; then
+     die "ERROR: libshaderc and libglslang are mutually exclusive, if in doubt, disable libglslang"
+ fi
+ 
++if enabled libglslang; then
++    if [ -x "$(command -v glslang)" ]; then
++        # https://github.com/KhronosGroup/glslang
++        # commit 6be56e45e574b375d759b89dad35f780bbd4792f: Remove `OGLCompiler` and `HLSL` stub libraries from build
++        # StandAlone/StandAlone.cpp: "SpirvGeneratorVersion:GLSLANG_VERSION_MAJOR.GLSLANG_VERSION_MINOR.GLSLANG_VERSION_PATCH GLSLANG_VERSION_FLAVOR"
++        glslang_version="$(glslang -dumpversion)"
++        glslang_major="${glslang_version%%.*}"
++        glslang_major="${glslang_major#*:}"
++        if test ${glslang_major} -le 13; then
++            libglslang_ldflags=" -lOSDependent -lHLSL -lOGLCompiler"
++        elif ! [[ ${glslang_major} =~ ^[0-9]+$ ]]; then
++            die "ERROR: glslang's computed major version isn't a number: '${glslang_major}'"
++        fi
++    else
++        die "ERROR: glslang binary not found, impossible to determine installed glslang's version"
++    fi
++fi
++
+ check_cpp_condition winrt windows.h "!WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)"
+ 
+ if ! disabled w32threads && ! enabled pthreads; then
+@@ -6958,10 +6977,10 @@ enabled libfreetype       && require_pkg_config libfreetype freetype2 "ft2build.
+ enabled libfribidi        && require_pkg_config libfribidi fribidi fribidi.h fribidi_version_info
+ enabled libharfbuzz       && require_pkg_config libharfbuzz harfbuzz hb.h hb_buffer_create
+ enabled libglslang && { check_lib spirv_compiler glslang/Include/glslang_c_interface.h glslang_initialize_process \
+-                            -lglslang -lMachineIndependent -lGenericCodeGen \
++                            -lglslang -lMachineIndependent "${libglslang_ldflags}" -lGenericCodeGen \
+                             -lSPVRemapper -lSPIRV -lSPIRV-Tools-opt -lSPIRV-Tools -lpthread -lstdc++ -lm ||
+                         require spirv_compiler glslang/Include/glslang_c_interface.h glslang_initialize_process \
+-                            -lglslang -lMachineIndependent -lOSDependent -lHLSL -lOGLCompiler -lGenericCodeGen \
++                            -lglslang -lMachineIndependent "${libglslang_ldflags}" -lOSDependent -lHLSL -lOGLCompiler -lGenericCodeGen \
+                             -lSPVRemapper -lSPIRV -lSPIRV-Tools-opt -lSPIRV-Tools -lpthread -lstdc++ -lm ; }
+ enabled libgme            && { check_pkg_config libgme libgme gme/gme.h gme_new_emu ||
+                                require libgme gme/gme.h gme_new_emu -lgme -lstdc++; }
+-- 
+2.45.2.windows.1
+

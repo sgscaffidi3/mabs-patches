@@ -1,12 +1,12 @@
-From cf824464cce21c5dce63ea5a08d66f9cf54af179 Mon Sep 17 00:00:00 2001
+From ddaa8489845083d6813f108e93c94fd1c4cb94cf Mon Sep 17 00:00:00 2001
 From: Greg Scaffidi <sgscaffidi3@gmail.com>
-Date: Fri, 4 Apr 2025 19:07:44 -0500
+Date: Fri, 4 Apr 2025 20:37:44 -0500
 Subject: [PATCH] fix linking
 
 ---
  Makefile.am  | 1 +
- configure.ac | 3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ configure.ac | 2 ++
+ 2 files changed, 3 insertions(+)
 
 diff --git a/Makefile.am b/Makefile.am
 index 261a58d..13bd2d7 100644
@@ -21,20 +21,14 @@ index 261a58d..13bd2d7 100644
  .PHONY: test test-build test-clean test-sync test-run
  clean-local: test-clean
 diff --git a/configure.ac b/configure.ac
-index b875b30..5607f8f 100644
+index b875b30..a4c6e49 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -137,7 +137,7 @@ if test "$enable_shared" = yes; then
-         bsymbolic=no
-     fi
-     LDFLAGS="$_LDFLAGS"
--    src_core_libffms2_la_LDFLAGS="$src_core_libffms2_la_LDFLAGS -version-info $VERSION_INFO"
-+    src_core_libffms2_la_LDFLAGS="$src_core_libffms2_la_LDFLAGS -version-info $VERSION_INFO -municode"
- else
-     bsymbolic=no
- fi
-@@ -152,6 +152,7 @@ if echo "$host" | $GREP "mingw" >/dev/null 2>&1; then
+@@ -150,8 +150,10 @@ AC_MSG_RESULT($bsymbolic)
+ 
+ if echo "$host" | $GREP "mingw" >/dev/null 2>&1; then
      LTUNDEF="-no-undefined"
++    src_index_ffmsindex_LDFLAGS="$src_index_ffmsindex_LDFLAGS -municode"
  fi
  AC_SUBST([LTUNDEF])
 +AC_SUBST([src_index_ffmsindex_LDFLAGS])
